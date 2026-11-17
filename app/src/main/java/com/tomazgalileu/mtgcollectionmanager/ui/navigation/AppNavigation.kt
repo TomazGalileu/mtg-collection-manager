@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.tomazgalileu.mtgcollectionmanager.ui.home.HomeScreen
+import com.tomazgalileu.mtgcollectionmanager.ui.collection.CollectionRoute
 
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
@@ -52,9 +53,10 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         }
 
         composable("collection") {
-            TemporaryScreen(
-                title = "Minha Coleção",
-                onBack = { navController.popBackStack() }
+            CollectionRoute(
+                onBack = {
+                    navController.popBackStack()
+                }
             )
         }
 

@@ -17,7 +17,9 @@ fun CollectionCard(
     onCardClick: (String) -> Unit,
     onIncreaseQuantity: (String) -> Unit,
     onDecreaseQuantity: (String) -> Unit,
-    onDeleteClick: (String) -> Unit
+    onDeleteClick: (String) -> Unit,
+    enableCardNavigation: Boolean = true,
+    enableDeletion: Boolean = true
 ) {
     Card(
         modifier = Modifier.fillMaxWidth()
@@ -28,7 +30,7 @@ fun CollectionCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable {
+                    .clickable(enabled = enableCardNavigation) {
                         onCardClick(card.id)
                     },
                 verticalAlignment = Alignment.CenterVertically
@@ -88,17 +90,21 @@ fun CollectionCard(
                 }
             }
 
-            TextButton(
-                onClick = {
-                    onDeleteClick(card.id)
-                },
-                modifier = Modifier.align(Alignment.End),
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Text("Excluir")
+
+            if (enableDeletion) {
+                TextButton(
+                    onClick = {
+                        onDeleteClick(card.id)
+                    },
+                    modifier = Modifier.align(Alignment.End),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Excluir")
+                }
             }
+
         }
     }
 }
