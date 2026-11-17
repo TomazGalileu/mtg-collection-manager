@@ -12,6 +12,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.tomazgalileu.mtgcollectionmanager.ui.home.HomeScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.tomazgalileu.mtgcollectionmanager.ui.search.SearchScreen
+import com.tomazgalileu.mtgcollectionmanager.ui.search.SearchViewModel
+import com.tomazgalileu.mtgcollectionmanager.ui.search.createSearchViewModelFactory
+
 
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
@@ -51,10 +58,29 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             )
         }
 
-        composable("collection") {
-            TemporaryScreen(
-                title = "Minha Coleção",
-                onBack = { navController.popBackStack() }
+
+        composable("search") {
+
+            val searchViewModel: SearchViewModel = viewModel(
+                factory = createSearchViewModelFactory()
+            )
+
+            val uiState by searchViewModel.uiState.collectAsState()
+
+            SearchScreen(
+                uiState = uiState,
+
+                onSearch = { text ->
+                    searchViewModel.searchCards(text)
+                },
+
+                onCardClick = { cardId ->
+                    // A tela de detalhes será conectada depois.
+                },
+
+                onBack = {
+                    navController.popBackStack()
+                }
             )
         }
 
