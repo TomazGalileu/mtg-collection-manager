@@ -198,3 +198,21 @@ fun CollectionScreenPreview() {
         )
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun CollectionScreenEmptyPreview() {
+    MaterialTheme(colorScheme = darkColorScheme()) {
+        CollectionScreen(
+            cards = emptyList(),
+            onCardClick = {},
+            onIncreaseQuantity = {},
+            onDecreaseQuantity = {},
+            onDeleteCard = {},
+            onBack = {},
+            enableCardNavigation = false,
+            enableDeletion = false
+        )
+    }
+}
+
