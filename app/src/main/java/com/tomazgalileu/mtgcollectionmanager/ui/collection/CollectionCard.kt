@@ -6,13 +6,19 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.network.NetworkHeaders
 import coil3.network.httpHeaders
@@ -51,30 +57,49 @@ fun CollectionCard(
                     contentAlignment = Alignment.Center
                 ) {
                     if (card.imageUrl.isNullOrBlank()) {
-                        Text("Sem imagem")
+                        Text(
+                            text = "Sem imagem",
+                            fontSize = 10.sp,
+                            textAlign = TextAlign.Center
+                        )
                     } else {
                         val context = LocalContext.current
 
-                        val headers = NetworkHeaders.Builder()
-                            .set(
-                                "User-Agent",
-                                "MTGCollectionManager/1.0 (Android academic project)"
-                            )
-                            .set(
-                                "Accept",
-                                "image/jpeg,image/png,image/*;q=0.9,*/*;q=0.8"
-                            )
-                            .build()
+                        var imageLoadFailed by remember(card.imageUrl) {
+                            mutableStateOf(false)
+                        }
 
-                        AsyncImage(
-                            model = ImageRequest.Builder(context)
+                        val headers = remember {
+                            NetworkHeaders.Builder()
+                                .set(
+                                    "User-Agent",
+                                    "MTGCollectionManager/1.0 (Android academic project)"
+                                )
+                                .set(
+                                    "Accept",
+                                    "image/jpeg,image/png,image/*;q=0.9,*/*;q=0.8"
+                                )
+                                .build()
+                        }
+
+                        val imageRequest = remember(
+                            context,
+                            card.imageUrl
+                        ) {
+                            ImageRequest.Builder(context)
                                 .data(card.imageUrl)
                                 .httpHeaders(headers)
-                                .build(),
+                                .build()
+                        }
+
+                        AsyncImage(
+                            model = imageRequest,
                             contentDescription = "Imagem da carta ${card.name}",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Fit,
                             onError = { error ->
+                                imageLoadFailed = true
+
                                 Log.e(
                                     "CollectionImage",
                                     "Erro ao carregar imagem de ${card.name}",
@@ -82,12 +107,23 @@ fun CollectionCard(
                                 )
                             },
                             onSuccess = {
+                                imageLoadFailed = false
+
                                 Log.d(
                                     "CollectionImage",
                                     "Imagem carregada: ${card.name}"
                                 )
                             }
                         )
+
+                        if (imageLoadFailed) {
+                            Text(
+                                text = "Imagem indisponível",
+                                fontSize = 10.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(2.dp)
+                            )
+                        }
                     }
                 }
 
@@ -151,5 +187,3 @@ fun CollectionCard(
         }
     }
 }
-
-
