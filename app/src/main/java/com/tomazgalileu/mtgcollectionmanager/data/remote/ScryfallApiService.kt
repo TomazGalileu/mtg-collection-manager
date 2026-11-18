@@ -1,7 +1,9 @@
+
 package com.tomazgalileu.mtgcollectionmanager.data.remote
 
 import retrofit2.http.GET
 import retrofit2.http.Headers
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ScryfallApiService {
@@ -14,4 +16,13 @@ interface ScryfallApiService {
     suspend fun searchCards(
         @Query("q") query: String
     ): ScryfallSearchResponse
+
+    @Headers(
+        "Accept: application/json",
+        "User-Agent: MTGCollectionManager/1.0"
+    )
+    @GET("cards/{id}")
+    suspend fun getCardById(
+        @Path("id") cardId: String
+    ): ScryfallCard
 }

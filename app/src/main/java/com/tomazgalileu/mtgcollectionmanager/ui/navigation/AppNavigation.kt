@@ -18,6 +18,12 @@ import androidx.compose.runtime.getValue
 import com.tomazgalileu.mtgcollectionmanager.ui.search.SearchScreen
 import com.tomazgalileu.mtgcollectionmanager.ui.search.SearchViewModel
 import com.tomazgalileu.mtgcollectionmanager.ui.search.createSearchViewModelFactory
+import androidx.compose.runtime.LaunchedEffect
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.tomazgalileu.mtgcollectionmanager.ui.details.CardDetailsScreen
+import com.tomazgalileu.mtgcollectionmanager.ui.details.CardDetailsViewModel
+import com.tomazgalileu.mtgcollectionmanager.ui.details.createCardDetailsViewModelFactory
 
 
 @Composable
@@ -51,13 +57,45 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             )
         }
 
-        composable("search") {
+        composable("collection") {
             TemporaryScreen(
-                title = "Pesquisar Cartas",
+                title = "Minha Coleção",
                 onBack = { navController.popBackStack() }
             )
         }
 
+        composable(
+            route = "cardDetails/{cardId}",
+            arguments = listOf(
+                navArgument("cardId") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+
+            val cardId = backStackEntry.arguments
+                ?.getString("cardId").orEmpty()
+
+            val detailsViewModel: CardDetailsViewModel = viewModel(
+                factory = createCardDetailsViewModelFactory()
+            )
+
+            val uiState by detailsViewModel.uiState.collectAsState()
+
+            LaunchedEffect(cardId) {
+                detailsViewModel.loadCard(cardId)
+            }
+
+            CardDetailsScreen(
+                uiState = uiState,
+                onRetry = {
+                    detailsViewModel.loadCard(cardId)
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
 
         composable("search") {
 
@@ -75,7 +113,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 },
 
                 onCardClick = { cardId ->
-                    // A tela de detalhes será conectada depois.
+                    navController.navigate("cardDetails/$cardId")
                 },
 
                 onBack = {
