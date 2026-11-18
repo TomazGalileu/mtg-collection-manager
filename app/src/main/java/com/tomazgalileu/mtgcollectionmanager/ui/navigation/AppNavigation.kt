@@ -1,3 +1,4 @@
+
 package com.tomazgalileu.mtgcollectionmanager.ui.navigation
 
 import androidx.compose.foundation.layout.Arrangement
@@ -6,13 +7,25 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.tomazgalileu.mtgcollectionmanager.ui.home.HomeScreen
 import com.tomazgalileu.mtgcollectionmanager.ui.collection.CollectionRoute
+import com.tomazgalileu.mtgcollectionmanager.ui.details.CardDetailsScreen
+import com.tomazgalileu.mtgcollectionmanager.ui.details.CardDetailsViewModel
+import com.tomazgalileu.mtgcollectionmanager.ui.details.createCardDetailsViewModelFactory
+import com.tomazgalileu.mtgcollectionmanager.ui.home.HomeScreen
+import com.tomazgalileu.mtgcollectionmanager.ui.search.SearchScreen
+import com.tomazgalileu.mtgcollectionmanager.ui.search.SearchViewModel
+import com.tomazgalileu.mtgcollectionmanager.ui.search.createSearchViewModelFactory
 
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
@@ -45,15 +58,63 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             )
         }
 
-        composable("search") {
-            TemporaryScreen(
-                title = "Pesquisar Cartas",
-                onBack = { navController.popBackStack() }
+        composable("collection") {
+            CollectionRoute(
+                onBack = {
+                    navController.popBackStack()
+                }
             )
         }
 
-        composable("collection") {
-            CollectionRoute(
+        composable(
+            route = "cardDetails/{cardId}",
+            arguments = listOf(
+                navArgument("cardId") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+
+            val cardId = backStackEntry.arguments
+                ?.getString("cardId").orEmpty()
+
+            val detailsViewModel: CardDetailsViewModel = viewModel(
+                factory = createCardDetailsViewModelFactory()
+            )
+
+            val uiState by detailsViewModel.uiState.collectAsState()
+
+            LaunchedEffect(cardId) {
+                detailsViewModel.loadCard(cardId)
+            }
+
+            CardDetailsScreen(
+                uiState = uiState,
+                onRetry = {
+                    detailsViewModel.loadCard(cardId)
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable("search") {
+
+            val searchViewModel: SearchViewModel = viewModel(
+                factory = createSearchViewModelFactory()
+            )
+
+            val uiState by searchViewModel.uiState.collectAsState()
+
+            SearchScreen(
+                uiState = uiState,
+                onSearch = { text ->
+                    searchViewModel.searchCards(text)
+                },
+                onCardClick = { cardId ->
+                    navController.navigate("cardDetails/$cardId")
+                },
                 onBack = {
                     navController.popBackStack()
                 }
@@ -63,7 +124,9 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         composable("decks") {
             TemporaryScreen(
                 title = "Meus Baralhos",
-                onBack = { navController.popBackStack() }
+                onBack = {
+                    navController.popBackStack()
+                }
             )
         }
     }
