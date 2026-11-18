@@ -1,5 +1,6 @@
 package com.tomazgalileu.mtgcollectionmanager.ui.collection
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -7,9 +8,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
+import coil3.network.NetworkHeaders
+import coil3.network.httpHeaders
+import coil3.request.ImageRequest
 
 @Composable
 fun CollectionCard(
@@ -43,7 +50,45 @@ fun CollectionCard(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("IMG")
+                    if (card.imageUrl.isNullOrBlank()) {
+                        Text("Sem imagem")
+                    } else {
+                        val context = LocalContext.current
+
+                        val headers = NetworkHeaders.Builder()
+                            .set(
+                                "User-Agent",
+                                "MTGCollectionManager/1.0 (Android academic project)"
+                            )
+                            .set(
+                                "Accept",
+                                "image/jpeg,image/png,image/*;q=0.9,*/*;q=0.8"
+                            )
+                            .build()
+
+                        AsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data(card.imageUrl)
+                                .httpHeaders(headers)
+                                .build(),
+                            contentDescription = "Imagem da carta ${card.name}",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Fit,
+                            onError = { error ->
+                                Log.e(
+                                    "CollectionImage",
+                                    "Erro ao carregar imagem de ${card.name}",
+                                    error.result.throwable
+                                )
+                            },
+                            onSuccess = {
+                                Log.d(
+                                    "CollectionImage",
+                                    "Imagem carregada: ${card.name}"
+                                )
+                            }
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
@@ -90,7 +135,6 @@ fun CollectionCard(
                 }
             }
 
-
             if (enableDeletion) {
                 TextButton(
                     onClick = {
@@ -104,8 +148,8 @@ fun CollectionCard(
                     Text("Excluir")
                 }
             }
-
         }
     }
 }
+
 
