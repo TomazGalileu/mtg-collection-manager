@@ -10,6 +10,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.layout.ContentScale
+import coil3.compose.AsyncImage
+import android.util.Log
+import androidx.compose.ui.platform.LocalContext
+import coil3.request.ImageRequest
+import coil3.network.NetworkHeaders
+import coil3.network.httpHeaders
+
 
 @Composable
 fun SearchScreen(
@@ -88,6 +100,7 @@ fun SearchScreen(
                         items = uiState.cards,
                         key = { it.id }
                     ) { card ->
+
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -95,22 +108,122 @@ fun SearchScreen(
                                     onCardClick(card.id)
                                 }
                         ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp)
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = card.name,
-                                    style = MaterialTheme.typography.titleMedium
-                                )
+                                val imageUrl = card.imageUris?.small
+                                    ?: card.cardFaces
+                                        ?.firstOrNull()
+                                        ?.imageUris
+                                        ?.small
+                                Box(
+                                    modifier = Modifier
+                                        .size(width = 64.dp, height = 88.dp)
+                                        .background(
+                                            MaterialTheme.colorScheme.surfaceVariant
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (imageUrl != null) {
 
-                                card.typeLine?.let { type ->
+                                        var isLoading by remember(imageUrl) {
+                                            mutableStateOf(true)
+                                        }
+
+                                        var hasError by remember(imageUrl) {
+                                            mutableStateOf(false)
+                                        }
+
+                                        AsyncImage(
+                                            model = ImageRequest.Builder(LocalContext.current)
+                                                .data(imageUrl)
+                                                .httpHeaders(
+                                                    NetworkHeaders.Builder()
+                                                        .set("User-Agent", "MTGCollectionManager/1.0")
+                                                        .set("Accept", "image/*")
+                                                        .build()
+                                                )
+                                                .build(),
+                                            contentDescription = "Imagem da carta ${card.name}",
+                                            contentScale = ContentScale.Fit,
+                                            modifier = Modifier.fillMaxSize(),
+
+                                            onLoading = {
+                                                isLoading = true
+                                                hasError = false
+                                            },
+
+                                            onSuccess = {
+                                                isLoading = false
+                                                hasError = false
+
+                                                Log.d(
+                                                    "CoilDebug",
+                                                    "Imagem carregada: $imageUrl"
+                                                )
+                                            },
+
+                                            onError = { state ->
+                                                isLoading = false
+                                                hasError = true
+
+                                                Log.e(
+                                                    "CoilDebug",
+                                                    "Erro ao carregar: $imageUrl",
+                                                    state.result.throwable
+                                                )
+                                            }
+                                        )
+
+                                        if (isLoading) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(24.dp),
+                                                strokeWidth = 2.dp
+                                            )
+                                        }
+
+                                        if (hasError) {
+                                            Text(
+                                                text = "Sem imagem",
+                                                style = MaterialTheme.typography.labelSmall
+                                            )
+                                        }
+
+                                    } else {
+                                        Text(
+                                            text = "Sem imagem",
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                Column(
+                                    modifier = Modifier.weight(1f)
+                                ) {
                                     Text(
-                                        text = type,
-                                        style = MaterialTheme.typography.bodyMedium
+                                        text = card.name,
+                                        style = MaterialTheme.typography.titleMedium
                                     )
+
+                                    val type = card.typeLine
+                                        ?: card.cardFaces
+                                            ?.firstOrNull()
+                                            ?.typeLine
+
+                                    if (type != null) {
+                                        Spacer(modifier = Modifier.height(4.dp))
+
+                                        Text(
+                                            text = type,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
                                 }
                             }
                         }
+
                     }
                 }
             }
