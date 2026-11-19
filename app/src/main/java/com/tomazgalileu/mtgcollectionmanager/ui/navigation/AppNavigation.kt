@@ -24,6 +24,7 @@ import androidx.navigation.navArgument
 import com.tomazgalileu.mtgcollectionmanager.ui.details.CardDetailsScreen
 import com.tomazgalileu.mtgcollectionmanager.ui.details.CardDetailsViewModel
 import com.tomazgalileu.mtgcollectionmanager.ui.details.createCardDetailsViewModelFactory
+import androidx.compose.ui.platform.LocalContext
 
 
 @Composable
@@ -64,6 +65,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             )
         }
 
+
         composable(
             route = "cardDetails/{cardId}",
             arguments = listOf(
@@ -76,8 +78,12 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             val cardId = backStackEntry.arguments
                 ?.getString("cardId").orEmpty()
 
+            val context = LocalContext.current.applicationContext
+
             val detailsViewModel: CardDetailsViewModel = viewModel(
-                factory = createCardDetailsViewModelFactory()
+                factory = createCardDetailsViewModelFactory(
+                    context = context
+                )
             )
 
             val uiState by detailsViewModel.uiState.collectAsState()
@@ -88,9 +94,19 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
             CardDetailsScreen(
                 uiState = uiState,
+
+                onAddToCollection = {
+                    detailsViewModel.addCardToCollection()
+                },
+
+                onClearOperationMessage = {
+                    detailsViewModel.clearOperationMessage()
+                },
+
                 onRetry = {
                     detailsViewModel.loadCard(cardId)
                 },
+
                 onBack = {
                     navController.popBackStack()
                 }

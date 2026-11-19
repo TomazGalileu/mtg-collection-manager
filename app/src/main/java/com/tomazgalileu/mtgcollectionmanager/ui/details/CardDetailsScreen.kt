@@ -21,6 +21,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 @Composable
 fun CardDetailsScreen(
     uiState: CardDetailsUiState,
+    onAddToCollection: () -> Unit,
+    onClearOperationMessage: () -> Unit,
     onRetry: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -217,8 +219,61 @@ fun CardDetailsScreen(
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
+
                             Text("Virar carta")
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Button(
+                        onClick = onAddToCollection,
+                        enabled = !uiState.isSaving,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (uiState.isSaving) {
+
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Text("Adicionando...")
+
+                        } else {
+                            Text("Adicionar à coleção")
+                        }
+                    }
+
+                    uiState.operationMessage?.let { message ->
+
+                        AlertDialog(
+                            onDismissRequest = onClearOperationMessage,
+
+                            title = {
+                                Text(
+                                    if (uiState.operationSuccess) {
+                                        "Sucesso"
+                                    } else {
+                                        "Falha na operação"
+                                    }
+                                )
+                            },
+
+                            text = {
+                                Text(message)
+                            },
+
+                            confirmButton = {
+                                TextButton(
+                                    onClick = onClearOperationMessage
+                                ) {
+                                    Text("OK")
+                                }
+                            }
+                        )
                     }
 
                 } else {
