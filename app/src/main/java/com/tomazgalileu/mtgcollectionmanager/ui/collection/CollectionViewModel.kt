@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import com.tomazgalileu.mtgcollectionmanager.data.repository.DeckRepository
 
 data class CollectionUiState(
     val cards: List<CollectionCardUi> = emptyList(),
@@ -20,7 +21,8 @@ data class CollectionUiState(
 )
 
 class CollectionViewModel(
-    private val repository: CollectionRepository
+    private val repository: CollectionRepository,
+    private val deckRepository: DeckRepository
 ) : ViewModel() {
 
     val uiState: StateFlow<CollectionUiState> =
@@ -67,6 +69,37 @@ class CollectionViewModel(
 
     fun decreaseQuantity(cardId: String) {
         updateQuantity(cardId, increase = false)
+    }
+
+    fun deleteCard(cardId: String) {
+        viewModelScope.launch {
+            try {
+                val cardIsInDeck = deckRepository.decks.value.any { deck ->
+                    cardId in deck.cardIds
+                }
+
+                if (cardIsInDeck) {
+                    _operationMessage.value =
+                        "Não é possível excluir uma carta utilizada em um baralho."
+                    return@launch
+                }
+
+                val deleted = repository.deleteCard(cardId)
+
+                _operationMessage.value = if (deleted) {
+                    "Carta excluída da coleção."
+                } else {
+                    "Não foi possível excluir a carta."
+                }
+
+            } catch (error: CancellationException) {
+                throw error
+
+            } catch (_: Exception) {
+                _operationMessage.value =
+                    "Ocorreu um erro ao excluir a carta."
+            }
+        }
     }
 
     private fun updateQuantity(

@@ -20,7 +20,9 @@ fun CollectionScreen(
     onIncreaseQuantity: (String) -> Unit,
     onDecreaseQuantity: (String) -> Unit,
     onDeleteCard: (String) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    enableCardNavigation: Boolean = true,
+    enableDeletion: Boolean = true
 ) {
     var cardToDeleteId by rememberSaveable {
         mutableStateOf<String?>(null)
@@ -80,14 +82,16 @@ fun CollectionScreen(
                         onDecreaseQuantity = onDecreaseQuantity,
                         onDeleteClick = { id ->
                             cardToDeleteId = id
-                        }
+                        },
+                        enableCardNavigation = enableCardNavigation,
+                        enableDeletion = enableDeletion
                     )
                 }
             }
         }
     }
 
-    if (cardToDelete != null) {
+    if (enableDeletion && cardToDelete != null) {
         AlertDialog(
             onDismissRequest = {
                 cardToDeleteId = null
@@ -194,3 +198,21 @@ fun CollectionScreenPreview() {
         )
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun CollectionScreenEmptyPreview() {
+    MaterialTheme(colorScheme = darkColorScheme()) {
+        CollectionScreen(
+            cards = emptyList(),
+            onCardClick = {},
+            onIncreaseQuantity = {},
+            onDecreaseQuantity = {},
+            onDeleteCard = {},
+            onBack = {},
+            enableCardNavigation = false,
+            enableDeletion = false
+        )
+    }
+}
+

@@ -32,7 +32,7 @@ import com.tomazgalileu.mtgcollectionmanager.ui.decks.DecksScreen
 import com.tomazgalileu.mtgcollectionmanager.ui.decks.DeckEditorScreen
 import com.tomazgalileu.mtgcollectionmanager.ui.decks.DecksViewModel
 import com.tomazgalileu.mtgcollectionmanager.ui.decks.createDecksViewModelFactory
-
+import com.tomazgalileu.mtgcollectionmanager.ui.collection.CollectionRoute
 
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
@@ -66,12 +66,15 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         }
 
         composable("collection") {
-            TemporaryScreen(
-                title = "Minha Coleção",
-                onBack = { navController.popBackStack() }
+            CollectionRoute(
+                onBack = {
+                    navController.popBackStack()
+                },
+                onCardClick = { cardId ->
+                    navController.navigate("cardDetails/$cardId")
+                }
             )
         }
-
 
         composable(
             route = "cardDetails/{cardId}",

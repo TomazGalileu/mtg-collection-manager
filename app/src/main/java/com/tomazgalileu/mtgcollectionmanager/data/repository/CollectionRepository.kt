@@ -34,4 +34,8 @@ class CollectionRepository(
     suspend fun decreaseQuantity(cardId: String): Boolean {
         return cardDao.decreaseQuantity(cardId) > 0
     }
+
+    suspend fun deleteCard(cardId: String): Boolean {
+        return cardDao.deleteCardById(cardId) > 0
+    }
 }
