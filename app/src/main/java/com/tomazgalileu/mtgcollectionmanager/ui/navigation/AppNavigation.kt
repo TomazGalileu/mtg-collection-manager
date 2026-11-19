@@ -25,6 +25,13 @@ import com.tomazgalileu.mtgcollectionmanager.ui.details.CardDetailsScreen
 import com.tomazgalileu.mtgcollectionmanager.ui.details.CardDetailsViewModel
 import com.tomazgalileu.mtgcollectionmanager.ui.details.createCardDetailsViewModelFactory
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.remember
+import androidx.compose.material3.AlertDialog
+import com.tomazgalileu.mtgcollectionmanager.ui.decks.DeckUi
+import com.tomazgalileu.mtgcollectionmanager.ui.decks.DecksScreen
+import com.tomazgalileu.mtgcollectionmanager.ui.decks.DeckEditorScreen
+import com.tomazgalileu.mtgcollectionmanager.ui.decks.DecksViewModel
+import com.tomazgalileu.mtgcollectionmanager.ui.decks.createDecksViewModelFactory
 
 
 @Composable
@@ -138,11 +145,173 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             )
         }
 
-        composable("decks") {
-            TemporaryScreen(
-                title = "Meus Baralhos",
-                onBack = { navController.popBackStack() }
+
+        composable("decks") { backStackEntry ->
+
+            val context = LocalContext.current.applicationContext
+
+            val decksViewModel: DecksViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = createDecksViewModelFactory(context)
             )
+
+            val decks by decksViewModel.decks.collectAsState()
+
+            val operationMessage by
+            decksViewModel.operationMessage.collectAsState()
+
+            DecksScreen(
+                decks = decks.map { deck ->
+                    DeckUi(
+                        id = deck.id,
+                        name = deck.name
+                    )
+                },
+
+                onCreateDeck = { name ->
+                    decksViewModel.createDeck(name)
+                },
+
+                onDeckClick = { deckId ->
+                    navController.navigate("deckEditor/$deckId") {
+                        launchSingleTop = true
+                    }
+                },
+
+                onDeleteDeck = { deckId ->
+                    decksViewModel.deleteDeck(deckId)
+                },
+
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+
+            operationMessage?.let { message ->
+
+                AlertDialog(
+                    onDismissRequest = {
+                        decksViewModel.clearOperationMessage()
+                    },
+                    title = {
+                        Text("Falha na operação")
+                    },
+                    text = {
+                        Text(message)
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                decksViewModel.clearOperationMessage()
+                            }
+                        ) {
+                            Text("OK")
+                        }
+                    }
+                )
+            }
+        }
+
+        composable(
+            route = "deckEditor/{deckId}",
+            arguments = listOf(
+                navArgument("deckId") {
+                    type = NavType.LongType
+                }
+            )
+        ) { backStackEntry ->
+
+            val deckId = backStackEntry.arguments
+                ?.getLong("deckId") ?: -1L
+
+            val context = LocalContext.current.applicationContext
+
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry("decks")
+            }
+
+            val decksViewModel: DecksViewModel = viewModel(
+                viewModelStoreOwner = parentEntry,
+                factory = createDecksViewModelFactory(context)
+            )
+
+            val decks by decksViewModel.decks.collectAsState()
+
+            val collectionCards by
+            decksViewModel.collectionCards.collectAsState()
+
+            val operationMessage by
+            decksViewModel.operationMessage.collectAsState()
+
+            val selectedDeck = decks.find {
+                it.id == deckId
+            }
+
+            if (selectedDeck != null) {
+
+                val deckCards = collectionCards.filter { card ->
+                    card.id in selectedDeck.cardIds
+                }
+
+                DeckEditorScreen(
+                    deckName = selectedDeck.name,
+
+                    deckCards = deckCards,
+
+                    collectionCards = collectionCards,
+
+                    onAddCard = { cardId ->
+                        decksViewModel.addCard(
+                            deckId = deckId,
+                            cardId = cardId
+                        )
+                    },
+
+                    onRemoveCard = { cardId ->
+                        decksViewModel.removeCard(
+                            deckId = deckId,
+                            cardId = cardId
+                        )
+                    },
+
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
+
+            } else {
+
+                TemporaryScreen(
+                    title = "Baralho não encontrado.",
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            operationMessage?.let { message ->
+
+                AlertDialog(
+                    onDismissRequest = {
+                        decksViewModel.clearOperationMessage()
+                    },
+                    title = {
+                        Text("Falha na operação")
+                    },
+                    text = {
+                        Text(message)
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                decksViewModel.clearOperationMessage()
+                            }
+                        ) {
+                            Text("OK")
+                        }
+                    }
+                )
+            }
         }
     }
 }
