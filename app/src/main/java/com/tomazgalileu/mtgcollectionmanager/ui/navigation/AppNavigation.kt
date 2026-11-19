@@ -69,6 +69,9 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             CollectionRoute(
                 onBack = {
                     navController.popBackStack()
+                },
+                onCardClick = { cardId ->
+                    navController.navigate("cardDetails/$cardId")
                 }
             )
         }

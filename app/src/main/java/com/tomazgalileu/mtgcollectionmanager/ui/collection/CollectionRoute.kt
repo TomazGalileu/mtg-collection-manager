@@ -25,10 +25,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tomazgalileu.mtgcollectionmanager.data.local.AppDatabase
 import com.tomazgalileu.mtgcollectionmanager.data.repository.CollectionRepository
+import com.tomazgalileu.mtgcollectionmanager.data.repository.DeckRepository
 
 @Composable
 fun CollectionRoute(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onCardClick: (String) -> Unit
 ) {
     val context = LocalContext.current.applicationContext
 
@@ -38,8 +40,18 @@ fun CollectionRoute(
         )
     }
 
-    val factory = remember(repository) {
-        createCollectionViewModelFactory(repository)
+    val deckRepository = remember(context, repository) {
+        DeckRepository(
+            context = context,
+            collectionRepository = repository
+        )
+    }
+
+    val factory = remember(repository, deckRepository) {
+        createCollectionViewModelFactory(
+            repository = repository,
+            deckRepository = deckRepository
+        )
     }
 
     val viewModel: CollectionViewModel = viewModel(
@@ -100,15 +112,15 @@ fun CollectionRoute(
                 else -> {
                     CollectionScreen(
                         cards = uiState.cards,
-                        onCardClick = {},
+                        onCardClick = onCardClick,
                         onIncreaseQuantity =
                             viewModel::increaseQuantity,
                         onDecreaseQuantity =
                             viewModel::decreaseQuantity,
-                        onDeleteCard = {},
+                        onDeleteCard = viewModel::deleteCard,
                         onBack = onBack,
-                        enableCardNavigation = false,
-                        enableDeletion = false
+                        enableCardNavigation = true,
+                        enableDeletion = true
                     )
                 }
             }
